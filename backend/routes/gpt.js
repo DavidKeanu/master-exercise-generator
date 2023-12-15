@@ -1,13 +1,8 @@
 const express = require('express');
 const openai = require('openai');
 const router = express.Router();
-const util = require('util');
-const {loadMistakesAsMarkdown, addFehler, load, loadFehlerhistorieAsMarkdown} = require("../services/dbService");
 const {USER_PROMPT_COMPILE_ERROR, SYSTEM_PROMPT_COMPILE_ERROR,
-  USER_PROMPT_EVALUATE_WITH_ASSIGNMENT_DEFAULT, USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT, USER_PROMPT_EXPLAIN_CODE,
-  SYSTEM_PROMPT_EXPLAIN_CODE, USER_PROMPT_EVALUATE_DEFAULT, SYSTEM_PROMPT_EVALUATION_FIND_MISTAKES, USER_PROMPT_EVALUATE_HELP,
-  USER_PROMPT_EVALUATE_HELP_WITH_ASSIGNMENT,
-  SYSTEM_PROMPT_EVALUATE_HELP
+  USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT, USER_PROMPT_EXPLAIN_CODE, SYSTEM_PROMPT_EXPLAIN_CODE
 } = require("../constants/GptPrompts");
 require('dotenv').config();
 
@@ -62,68 +57,6 @@ router.get('/models', async (req, res) => {
       .filter(item => item.id.includes('gpt'))
       .map(item => item.id);
     res.json({ models: gptModels });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-/**
- * Endpoint for "Evaluierer" in frontend.
- * Calls the gpt api with system and user prompt to evaluate user code.
- * ---
- * Required: Code, session
- * Optional: gpt model, assignment
- * Returns: Generated evaluation in json format
- */
-router.post('/evaluate', async(req, res) => {
-  const { code, model, assignment, session } = req.body;
-  const modelToUse = model || process.env.DEFAULT_CHAT_GPT_MODEL;
-
-  const markdownMistakes = await loadMistakesAsMarkdown();
-
-  try {
-    const response = await openaiApi.createChatCompletion({
-      model: modelToUse,
-      messages: [
-        {
-          role: 'system',
-          content: util.format(SYSTEM_PROMPT_EVALUATION_FIND_MISTAKES, markdownMistakes)
-        },
-        {
-          role: 'user',
-          content: assignment ? util.format(USER_PROMPT_EVALUATE_WITH_ASSIGNMENT_DEFAULT, code, assignment) : util.format(USER_PROMPT_EVALUATE_DEFAULT, code)
-        }
-      ]
-    });
-    const gptResponse = response.data.choices[0].message.content;
-
-    await addFehler(gptResponse, session);
-
-    try {
-      const fehlerhistorie = await loadFehlerhistorieAsMarkdown(session);
-
-      const response2 = await openaiApi.createChatCompletion({
-        model: modelToUse,
-        messages: [
-          {
-            role: 'system',
-            content: util.format(SYSTEM_PROMPT_EVALUATE_HELP, fehlerhistorie)
-          },
-          {
-            role: 'user',
-            content: assignment ? util.format(USER_PROMPT_EVALUATE_HELP_WITH_ASSIGNMENT, code, assignment) : util.format(USER_PROMPT_EVALUATE_HELP, code)
-          }
-        ]
-      });
-
-      res.json({ evaluation: response2.data.choices[0].message.content });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
-
-    //res.json({ evaluation: gptResponse });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal Server Error' });
