@@ -1,6 +1,7 @@
 const express = require('express');
 const openai = require('openai');
 const router = express.Router();
+const util = require('util');
 const {USER_PROMPT_COMPILE_ERROR, SYSTEM_PROMPT_COMPILE_ERROR,
   USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT, USER_PROMPT_EXPLAIN_CODE, SYSTEM_PROMPT_EXPLAIN_CODE
 } = require("../constants/GptPrompts");
