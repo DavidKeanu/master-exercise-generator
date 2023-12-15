@@ -7,11 +7,9 @@ import CompileOutput from "./CompileOutput";
 import {parseErrorLines} from "../utils/CompileOutputParser";
 import GptCompilationHelper from "./GptCompilationHelper";
 import GptService from "../services/GptService";
-import StudentIdentifierModal from "./StudentIdentifierModal";
 import JoyRideTutorial from "./JoyRideTutorial";
 import {STATUS} from "react-joyride";
 import ManagementBar from "./ManagementBar";
-import GptEvaluator from "./GptEvaluator";
 import SplitPane, {Pane} from 'split-pane-react';
 import 'split-pane-react/esm/themes/default.css'
 import GptExplainer from "./GptExplainer";
@@ -29,14 +27,12 @@ const Home = () => {
   const { setLoading, sitzungsId } = useContext(AppContext);
   const [aiHelpCompileError, setAiHelpCompileError] = useState('');
   const [tourRunning, setTourRunning] = useState(false);
-  const [evaluationText, setEvaluationText] = useState('[]');
   const [sizesCodingAndAI, setSizesCodingAndAI] = useState([
     '70%',
     '30%',
   ]);
   const [sizesAI, setSizesAI] = useState([
-    '60%',
-    '20%',
+    '80%',
     '20%',
   ]);
   const [sizesCoding, setSizesCoding] = useState([
@@ -155,19 +151,6 @@ const Home = () => {
   const handleCompileClick = () => sendCompileAndStatusRequests(code);
 
   /**
-   * Will be called in the management bar component. Gpt service is called to evaluate code.
-   * @param gptModel Desired gpt model
-   * @param assignment optional assignment
-   */
-  const handleEvaluationClick = (gptModel, assignment) => {
-    setLoading(true);
-    GptService.evaluateCode(code, gptModel, assignment, sitzungsId).then(result => {
-      setEvaluationText(result);
-      stopLoading();
-    }).catch(stopLoading);
-  }
-
-  /**
    * Will be called in the management bar component. Gpt service is called to explain code.
    * @param gptModel Desired gpt model
    * @param assignment optional assignment
@@ -238,7 +221,6 @@ const Home = () => {
       <ManagementBar
         startHelpTour={handleStartHelpTour}
         handleCompileClick={handleCompileClick}
-        handleEvaluateClick={handleEvaluationClick}
         handleCompileErrorExplanation={handleAiHelperRequestClick}
         handleExplainCode={handleExplainCodeClick}
         compileStatus={compileStatus}
@@ -275,11 +257,6 @@ const Home = () => {
               sizes={sizesAI}
               onChange={setSizesAI}
             >
-              <Pane minSize='30%'>
-                <div className="flex-grow h-full">
-                  <GptEvaluator output={evaluationText}/>
-                </div>
-              </Pane>
               <Pane minSize='10%'>
                 <div className="flex-grow h-full">
                   <GptExplainer output={explainText}/>
@@ -294,7 +271,6 @@ const Home = () => {
           </Pane>
         </SplitPane>
       </div>
-      <StudentIdentifierModal/>
     </div>
   );
 }

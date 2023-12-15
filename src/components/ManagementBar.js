@@ -15,7 +15,6 @@ const ManagementBar = (props) => {
 
   const {
     handleCompileClick,
-    handleEvaluateClick,
     handleExplainCode,
     startHelpTour,
     handleCompileErrorExplanation,
@@ -128,11 +127,6 @@ const ManagementBar = (props) => {
                   onClick={() => handleCompileErrorExplanation(selectedGptModel)}
                   title="Compilerfehler/Runtimefehler erklären lassen">
             <AiOutlineQuestionCircle size={25} />
-          </button>
-          <button className={`evaluate-code-button ${aiButtonsCss}`}
-                  onClick={() => handleEvaluateClick(selectedGptModel, assignmentText)}
-                  title="Code evaluieren">
-            <HiSparkles size={25} />
           </button>
           <button className={`explain-code-button ${aiButtonsCss}`}
                   onClick={() => handleExplainCode(selectedGptModel, assignmentText)}
