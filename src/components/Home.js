@@ -53,6 +53,10 @@ const Home = () => {
     }
   };
 
+  const updateCode = (newCode) => {
+    setCode(newCode);
+  };
+
   /**
    * Sends code to external compiler.
    * Sets application loading screen to true until code is compiled.
@@ -171,6 +175,7 @@ const Home = () => {
    * @param gptModel Desired gpt model
    */
   const handleAiHelperRequestClick = (gptModel) => {
+    console.log('test');
     setLoading(true);
     GptService.getCompileErrorHelp(code, compileOutput, gptModel).then(function(result) {
       setLoading(false);
@@ -229,6 +234,7 @@ const Home = () => {
         compileStatus={compileStatus}
         handleAssignmentRequest={handleAssignmentRequest}
         handleSaveCodeAsFile={handleSaveCodeAsFile}
+        updateCode={updateCode}
         onChange={onChange}
       />
       <div className="flex h-screen w-full">
