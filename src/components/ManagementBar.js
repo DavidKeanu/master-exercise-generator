@@ -6,6 +6,8 @@ import GptService from "../services/GptService";
 import {MdAssignment, MdOutlineAssignment} from "react-icons/md";
 import AssignmentModal from "./AssignmentModal";
 import Draggable from "react-draggable";
+import {Button} from "@mui/material";
+import SimpleDialogDemo from "./SimpleDialog";
 
 /**
  * Bar on top of the editor. Each editor function is called from here.
@@ -34,7 +36,6 @@ const ManagementBar = (props) => {
   const aiButtonsCss = "bg-purple-500 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded";
   const aiButtonsDisabledCss = "bg-purple-500 text-white font-bold py-1 px-2 rounded opacity-50 cursor-not-allowed";
 
-  const generateTask = "bg-purple-500"
   const ERROR_CODES = [6,7,8,9,10,11,12];
 
   useEffect(() => {
@@ -54,12 +55,6 @@ const ManagementBar = (props) => {
   /**
    * Handles file upload
    */
-
-
-  function handleTest(x) {
-    console.log(x);
-  }
-
   const handleFileUpload = useCallback((event) => {
     const file = event.target.files[0];
     const reader = new FileReader();
@@ -145,11 +140,6 @@ const ManagementBar = (props) => {
                   onClick={handleSaveCodeAsFile}>
             <BiSave size={25} />
           </button>
-          <button className={generateTask}
-                  onClick={handleAssignmentRequest}
-                  title="Compilerfehler/Runtimefehler erklären lassen">
-            <AiOutlineQuestionCircle size={25} />
-          </button>
           <label htmlFor="file-input" className="upload-file-button bg-orange-500 hover:bg-orange-700 text-white font-bold py-1 px-2 rounded cursor-pointer"
                  title="Datei Laden">
             <BiFolder size={25} />
@@ -182,8 +172,11 @@ const ManagementBar = (props) => {
               ))}
             </select>
           </div>
-
-
+          <Button variant="contained"
+                  onClick={handleAssignmentRequest}
+                  title="Generate Task">Generate Task
+          </Button>
+          <SimpleDialogDemo />
         </div>
         <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
                 onClick={startHelpTour}
