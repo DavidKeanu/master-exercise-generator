@@ -107,6 +107,11 @@ Ist das der Fall, kontrolliere, ob die Aufgabenstellung erfüllt wurde. Wenn die
 const USER_PROMPT_EXPLAIN_CODE = 'Hier der Code\n\n%s';
 const USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT = 'Hier der Code\n\n%s\n\nHier die Aufgabe dazu\n\n%s';
 
+const SYSTEM_PROMPT_GENERATE_TASK = `
+Du bist ein Helfer um Programmieraufgaben für Anfänger zu generieren.
+Schreibe die Aufgabe und trenne die Lösung mit ****`;
+
+
 module.exports = {
   SYSTEM_PROMPT_COMPILE_ERROR,
   USER_PROMPT_COMPILE_ERROR,
@@ -118,5 +123,6 @@ module.exports = {
   SYSTEM_PROMPT_EVALUATION_FIND_MISTAKES,
   USER_PROMPT_EVALUATE_HELP,
   USER_PROMPT_EVALUATE_HELP_WITH_ASSIGNMENT,
-  SYSTEM_PROMPT_EVALUATE_HELP
+  SYSTEM_PROMPT_EVALUATE_HELP,
+  SYSTEM_PROMPT_GENERATE_TASK
 }

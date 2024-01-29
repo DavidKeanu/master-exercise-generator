@@ -3,7 +3,8 @@ const openai = require('openai');
 const router = express.Router();
 const util = require('util');
 const {USER_PROMPT_COMPILE_ERROR, SYSTEM_PROMPT_COMPILE_ERROR,
-  USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT, USER_PROMPT_EXPLAIN_CODE, SYSTEM_PROMPT_EXPLAIN_CODE
+  USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT, USER_PROMPT_EXPLAIN_CODE, SYSTEM_PROMPT_EXPLAIN_CODE,
+  SYSTEM_PROMPT_GENERATE_TASK
 } = require("../constants/GptPrompts");
 require('dotenv').config();
 
@@ -58,6 +59,38 @@ router.get('/models', async (req, res) => {
       .filter(item => item.id.includes('gpt'))
       .map(item => item.id);
     res.json({ models: gptModels });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/generateTask', async (req, res) => {
+
+  const modelToUse = process.env.DEFAULT_CHAT_GPT_MODEL;
+
+  console.log(req.body);
+
+  const prompt = req.body.prompt;
+
+  try {
+    const response = await openaiApi.createChatCompletion({
+      model: modelToUse,
+      messages: [
+        {
+          role: 'system',
+          content: SYSTEM_PROMPT_GENERATE_TASK
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.2
+    });
+    const gptResponse = response.data.choices[0].message.content;
+
+    res.json({ message: gptResponse });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal Server Error' });

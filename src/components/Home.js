@@ -14,7 +14,7 @@ import SplitPane, {Pane} from 'split-pane-react';
 import 'split-pane-react/esm/themes/default.css'
 import GptExplainer from "./GptExplainer";
 import INITIAL_CODE from "../constants/CodeEditorConstants";
-
+import GenerateAssignmentService from "../services/GenerateAssignment";
 /**
  * Home component. Combines every other component
  */
@@ -150,6 +150,9 @@ const Home = () => {
 
   const handleCompileClick = () => sendCompileAndStatusRequests(code);
 
+  const handleAssignmentRequest = () => GenerateAssignmentService.sendAssignmentRequest().
+    then((test)=> console.log(test));
+
   /**
    * Will be called in the management bar component. Gpt service is called to explain code.
    * @param gptModel Desired gpt model
@@ -224,6 +227,7 @@ const Home = () => {
         handleCompileErrorExplanation={handleAiHelperRequestClick}
         handleExplainCode={handleExplainCodeClick}
         compileStatus={compileStatus}
+        handleAssignmentRequest={handleAssignmentRequest}
         handleSaveCodeAsFile={handleSaveCodeAsFile}
         onChange={onChange}
       />

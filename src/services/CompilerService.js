@@ -16,7 +16,7 @@ class CompilerService extends Service {
     const data = {
       code: code
     }
-
+    console.log(code);
     const response = await this.request('compiler/compile-token', {
       method: 'post',
       data: data
