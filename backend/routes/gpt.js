@@ -6,6 +6,7 @@ const {USER_PROMPT_COMPILE_ERROR, SYSTEM_PROMPT_COMPILE_ERROR,
   USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT, USER_PROMPT_EXPLAIN_CODE, SYSTEM_PROMPT_EXPLAIN_CODE,
   SYSTEM_PROMPT_GENERATE_TASK
 } = require("../constants/GptPrompts");
+const {getTask} = require("../constants/PrompsExcerciseGenerator");
 require('dotenv').config();
 
 const config = new openai.Configuration({
@@ -69,23 +70,31 @@ router.post('/generateTask', async (req, res) => {
 
   const modelToUse = process.env.DEFAULT_CHAT_GPT_MODEL;
 
-  console.log(req.body);
+  console.log("test", req.body);
 
-  const prompt = req.body.prompt;
+  console.log("schwierigkeitsgrad", req.body.schwierigkeitsgrad);
+
+  const aufgabentyp = req.body.aufgabentyp;
+  const schwierigkeitsgrad = req.body.schwierigkeitsgrad;
+
+  const aufgabentyp2 = getTask(aufgabentyp);
+  console.log(aufgabentyp2);
+
+  const chatHistory = [
+    { role: 'system', content: 'Du bist ein hilfreiches Programm und sollst Programmieraufgaben für Anfänger generieren.' },
+    { role: 'assistant', content: 'Deklariere eine Variable mit dem Variablennamen `zahl` vom Datentyp `int` und initialisiere sie mit dem Wert 5.' },
+    { role: 'user', content: 'Das ist eine gute Aufgabe für Anfänger, weil sie leicht ist.' },
+    { role: 'assistant', content: 'Bestimme den Datentyp und den Wert der folgenden Ausdrücke: 7 % 2'},
+    { role: 'user', content: 'Das ist eine gute Aufgabe für Anfänger, weil sie mittel ist.'},
+    { role: 'system', content: 'Generiere eine komplett neue Aufgaben, die gut für Anfänger ist!' },
+  ];
+
 
   try {
     const response = await openaiApi.createChatCompletion({
       model: modelToUse,
-      messages: [
-        {
-          role: 'system',
-          content: SYSTEM_PROMPT_GENERATE_TASK
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
+      messages:
+        chatHistory,
       temperature: 0.2
     });
     const gptResponse = response.data.choices[0].message.content;

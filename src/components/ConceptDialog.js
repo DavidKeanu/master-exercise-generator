@@ -6,42 +6,46 @@ import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import CardMedia from '@mui/material/CardMedia';
 import Typography from '@mui/material/Typography';
-import {CircularProgress, Grid, IconButton, Rating} from "@mui/material";
+import {CircularProgress, Grid, IconButton, Rating, Tooltip} from "@mui/material";
 import generateAssignmentService from "../services/GenerateAssignment";
-import {AddTask} from "@mui/icons-material";
+import {Help} from "@mui/icons-material";
 
 const cardData = [
     {
         title: 'Datentypen & Ausdrücke',
         description: 'Schwierigkeitsgrad:',
-        image: 'https://i.imgur.com/Mm3Cpc3.png',
     },
     {
         title: 'Prorammcode analysieren',
         description: 'Schwierigkeitsgrad:',
-        image: 'https://via.placeholder.com/150',
     },
     {
         title: 'Welche Aussagen treffen auf den folgenden Code zu',
         description: 'Schwierigkeitsgrad:',
-        image: 'https://via.placeholder.com/150',
     },
     // Add more card data as needed
-];
 
-const CardListDialog = () => {
+];
+// Define an array of fixed colors
+const cardColors = ['#FF5733', '#33FF57', '#5733FF', '#FF3366', '#66FF33'];
+
+const CardListDialog = ({sendDataToParent}) => {
     const [open, setOpen] = useState(false);
     const [ratings, setRatings] = useState(Array(cardData.length).fill(0));
-    const [loading, setLoading] = useState(false); // Loading state
+    const [loadingStates, setLoadingStates] = useState(Array(cardData.length).fill(false));
+
+    const sendAssignmentTextToParent = (response) => {
+        // Call the function passed from the parent component with the data
+        sendDataToParent(response);
+    };
+
 
     const handleRatingChange = (index, newValue) => {
         // Create a new array with the updated rating for the specific card
         const newRatings = [...ratings];
         newRatings[index] = newValue;
         setRatings(newRatings);
-        console.log(newRatings);
     };
 
     const handleOpen = () => {
@@ -54,21 +58,43 @@ const CardListDialog = () => {
     const handleGenerateTask = async (index) => {
         try {
             // Set loading to true while waiting for the response
-            setLoading(true);
+            const updatedLoadingStates = [...loadingStates];
+            updatedLoadingStates[index] = true;
+            setLoadingStates(updatedLoadingStates);
 
+            // Perform your asynchronous task (e.g., fetch data, etc.)
+            // Once the task is done, set the loading state back to false
+            // For example purposes, using setTimeout to simulate an asynchronous task
+            setTimeout(() => {
+                updatedLoadingStates[index] = false;
+                setLoadingStates(updatedLoadingStates);
+            }, 2000);
+
+            const data = {
+                aufgabentyp: index,
+                schwierigkeitsgrad: ratings[index]
+            };
             // Call the sendAssignmentRequest method
-            const response = await generateAssignmentService.sendAssignmentRequest();
-
+            const response = await generateAssignmentService.sendAssignmentRequest(data);
             // Set the response content and open the response modal
-            console.log(response);
+            setOpen(false);
+            sendAssignmentTextToParent(response);
+
         } catch (error) {
             console.error('Error generating task:', error);
             // Handle error as needed
         } finally {
             // Set loading back to false once the request is complete
-            setLoading(false);
+            setLoadingStates(Array(cardData.length).fill(false));
         }
     };
+    const tooltipContent = (
+        <Typography variant="body2" color="textSecondary">
+            <div>1 Stern = Leicht</div>
+            <div>2 Sterne = Mittel</div>
+            <div>3 Sterne = Schwer</div>
+        </Typography>
+    );
 
     return (
         <div>
@@ -77,7 +103,13 @@ const CardListDialog = () => {
             </Button>
 
             <Dialog onClose={handleClose} open={open} maxWidth="md" fullWidth>
-                <DialogTitle>Was möchtest du lernen?</DialogTitle>
+                <DialogTitle>Was möchtest du lernen?
+                    <Tooltip title={tooltipContent} arrow style={{ marginLeft: 'auto' }}>
+                        <IconButton>
+                            <Help />
+                        </IconButton>
+                    </Tooltip>
+                </DialogTitle>
                 <DialogContent>
                     <Grid container spacing={2}>
                         {cardData.map((card, index) => (
@@ -87,13 +119,8 @@ const CardListDialog = () => {
                                     flexDirection: 'column',
                                     width: '100%',
                                     height: '100%', // Set a fixed height for each card
+                                    backgroundColor: cardColors[index % cardColors.length], // Use a fixed color
                                 }}>
-                                    <CardMedia
-                                        component="img"
-                                        height="140"
-                                        image={card.image}
-                                        alt={card.title}
-                                    />
                                     <CardContent>
                                         <Typography variant="h6" component="div">
                                             {card.title}
@@ -107,20 +134,23 @@ const CardListDialog = () => {
                                             onChange={(event, newValue) =>
                                                 handleRatingChange(index, newValue)
                                             }
+                                            max={3}  // Set the maximum number of stars to 3
                                         />
+
                                     </CardContent>
                                     <div style={{
                                         marginTop: 'auto',
                                         paddingTop: '8px',
-                                        marginBottom: '8px',
                                         display: 'flex',
-                                        justifyContent: 'center'
+                                        justifyContent: 'center',
+                                        backgroundColor: 'white', // Set button background color to white
+
                                     }}>
                                         <Button
                                             variant="outlined"
                                             color="primary"
                                             onClick={() => handleGenerateTask(index)}
-                                        >{loading ? <CircularProgress size={24}/> : 'Aufgabe generieren'}
+                                        >{loadingStates[index] ? <CircularProgress size={24}/> : 'Aufgabe generieren'}
                                         </Button>
                                     </div>
 

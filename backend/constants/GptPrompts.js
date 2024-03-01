@@ -109,7 +109,7 @@ const USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT = 'Hier der Code\n\n%s\n\nHier di
 
 const SYSTEM_PROMPT_GENERATE_TASK = `
 Du bist ein Helfer um Programmieraufgaben für Anfänger zu generieren.
-Schreibe die Aufgabe und trenne die Lösung mit ****`;
+Schreibe eine Aufgabe und wechle die Sturktur der Aufgaben`;
 
 
 module.exports = {
