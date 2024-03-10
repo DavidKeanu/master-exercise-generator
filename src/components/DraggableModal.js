@@ -2,93 +2,182 @@ import React, {useEffect, useState} from 'react';
 import Draggable from 'react-draggable';
 import Button from '@mui/material/Button';
 import Typography from "@mui/material/Typography";
-import {IconButton, Rating} from "@mui/material";
+import {CircularProgress, FormControl, IconButton, InputLabel, MenuItem, Select} from "@mui/material";
 import {Close, ThumbDown, ThumbUp} from "@mui/icons-material";
-import {addDoc, collection} from "firebase/firestore";
-import {db} from "../config/firebase";
+import dbService from "../services/DbService";
+import generateAssignmentService from "../services/GenerateAssignment";
 
 
-const DraggableModal = ({responseText, onClose}) => {
-    // Initial state object
-    const initialObject = {
-        difficulty: "",
-        experience: 4,
-        isGoodTask: "",
-        task: responseText
-    };
+const DraggableModal = ({aufgabe, code, onClose, solution}) => {
 
-    const [starRating, setStarRating] = useState(0);
     // State and setter function
-    const [exercise, setExercise] = useState(initialObject);
+    //const [task, setTask] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [begruendung, setBegruendung] = useState('');
+    const [isThumbsDownClicked, setThumbsDownClicked] = useState();
+    const [isThumbsUpClicked, setThumbsUpClicked] = useState();
+    const [solutionDisabled, setSolutionDisabled] = useState(true);
+    const [newTaskDisabled, setNewTaskDisabled] = useState(true);
+    const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+    const [aufgabeInput, setAufgabeInput] = useState(aufgabe);
+    const options = ['zu leicht', 'zu schwer', 'Aufgabe wiederholt sich.'];
 
-    // Custom setter function for updating specific properties
-    const updateProperty = (property, value) => {
-        // Using the callback form of setState to ensure you have the latest state
-        setExercise(prevState => {
-            return {
-                ...prevState,
-                [property]: value
-            };
-        });
-    };
+    const updateTaskProperty = async (fieldUpdates) => {
+        // Fetch the updatedTask directly from the local state
+        console.log("aufgabeInput:")
+        console.log(aufgabeInput);
+        const updatedTask = {
+            ...aufgabeInput,
+            ...fieldUpdates
+        };
+        // Now, perform the asynchronous update with dbService
+        const response = await dbService.updateTask(updatedTask);
+        // Update the local state and log the updated task after the state has been set
+        // Update the local state
+        setAufgabeInput({ ...updatedTask, id: response.id });
 
-    const handleStarRatingChange = async (newValue) => {
-        setStarRating(newValue);
-        console.log(newValue);
-
-        updateProperty('difficulty', newValue);
-    };
-
-    const handleThumbClick = (isThumbsUp) => {
-        // Log the result when thumbs up or thumbs down is clicked
-        console.log(`Clicked ${isThumbsUp ? 'Thumbs Up' : 'Thumbs Down'}`);
-        updateProperty('isGoodTask', isThumbsUp);
-
-    };
-
-    // Function to validate if all fields are set
-    const areAllFieldsSet = () => {
-        return Object.values(exercise).every(value => value !== "" && value !== undefined);
-    };
-
-    // Function to update Firestore collection
-    const updateFirestoreCollection = async () => {
-        if (areAllFieldsSet()) {
-            try {
-                const docRef = await addDoc(collection(db, "excercises"), {
-                    ...exercise
-                });
-                console.log('Document added with ID:', docRef.id);
-            } catch (error) {
-                console.error('Error adding document:', error);
-            }
-        } else {
-            console.warn('Not all fields are set. Skipping Firestore update.');
-        }
     };
 
     useEffect(() => {
-        // Check if it's not the initial render
-        if (exercise !== initialObject) {
-            updateFirestoreCollection(); // Call the async function here
-        }
-        console.log(exercise); // This will reflect the updated state
-    }, [exercise]); // useEffect will run whenever 'exercise' changes
+        // Log the updated task when aufgabeInput changes
+        // Skip the effect on the initial render
+        console.log("UpdateTask Frontend");
+        console.log(aufgabeInput);
+    }, [aufgabeInput]); // Add aufgabeInput as a dependency to watch for changes
 
+    const handleChange = async (event) => {
+        setBegruendung(event.target.value);
+        if (begruendung === '') {
+            setNewTaskDisabled(true);
+            setSolutionDisabled(true);
+        }
+        await updateTaskProperty({isGoodTask: false, begruendung: event.target.value});
+        setIsButtonDisabled(false);
+        setSolutionDisabled(true);
+        setNewTaskDisabled(false);
+    };
+
+    const handleThumbUpClick = async () => {
+        if (!isThumbsUpClicked) {
+            setThumbsUpClicked(true);
+            setThumbsDownClicked(false); // Disable the Thumb Down button
+            setSolutionDisabled(false);
+            setIsButtonDisabled(false);
+            setBegruendung('');
+            setNewTaskDisabled(false);
+            await updateTaskProperty({isGoodTask: true,  begruendung: begruendung});
+        } else {
+            setThumbsUpClicked(false);
+            setIsButtonDisabled(true);
+            setSolutionDisabled(true);
+            setNewTaskDisabled(true);
+        }
+    };
+    const handleThumbDownClick = async () => {
+        if (!isThumbsDownClicked) {
+            setThumbsDownClicked(true);
+            if(begruendung === ""){
+                setIsButtonDisabled(true);
+            }
+            //await updateTaskProperty({isGoodTask: false,  begruendung: begruendung});
+            if(isThumbsUpClicked){
+                setSolutionDisabled(true);
+                setNewTaskDisabled(true);
+                setThumbsUpClicked(false);
+            }
+        }
+        else {
+            setThumbsDownClicked(false);
+            setBegruendung('');
+            setIsButtonDisabled(true);
+            setSolutionDisabled(true);
+            setNewTaskDisabled(true);
+        }
+    };
+
+    const newTask = async () => {
+        try {
+            setLoading(true);
+
+            const data = {
+                aufgabentyp: aufgabeInput.aufgabentyp,
+                schwierigkeitsgrad: aufgabeInput.schwierigkeitsgrad,
+                experience: aufgabeInput.experience,
+                begruendung: aufgabeInput.begruendung,
+                isGoodTask: aufgabeInput.isGoodTask,
+                task: aufgabeInput.task
+            };
+
+            // Call the sendAssignmentRequest method
+            const response = await generateAssignmentService.sendAssignmentRequest(data);
+
+            const responseFromBackend = {
+                aufgabentyp: response.aufgabentyp,
+                schwierigkeitsgrad: response.schwierigkeitsgrad,
+                experience: response.experience,
+                task: response.task
+            };
+
+            setThumbsUpClicked(false);
+            setThumbsDownClicked(false);
+            setAufgabeInput(responseFromBackend);
+            setNewTaskDisabled(true);
+            setIsButtonDisabled(true);
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const checkSolution = async () => {
+        const solutionObject = {
+            aufgabe: aufgabeInput.task,
+            code: code,
+        }
+        const solutionFromGpt = await generateAssignmentService.checkSolution(solutionObject);
+        solution(solutionFromGpt);
+    };
+
+    const mapIdToAufgabe = (id) => {
+        switch (id) {
+            case 0:
+                return 'Datentypen & Ausdrücke';
+            case 1:
+                return 'Arrays';
+            case 2:
+                return 'Schleifen';
+            // Add more cases as needed
+            default:
+                return 'Unknown';
+        }
+    }
 
     return (
+        <div>
         <Draggable>
             <div style={{position: 'absolute', zIndex: 1}}>
                 {/* Draggable component content */}
                 <div style={{backgroundColor: 'white', padding: '16px', border: '1px solid #ccc'}}>
                     <div style={{display: 'flex'}}>
-                        <Typography variant="h5">Programmierkonzept Placeholder</Typography>
-                        <IconButton style={{marginLeft: 'auto'}} onClick={onClose}>
+                        <Typography variant="h5">{mapIdToAufgabe(aufgabeInput.aufgabentyp)}</Typography>
+                        <IconButton style={{marginLeft: 'auto'}} onClick={onClose} disabled={isButtonDisabled}>
                             <Close></Close>
                         </IconButton>
                     </div>
-                    <div style={{marginBottom: '10px', minWidth: '400px', maxWidth: '600px', fontSize: '16px'}}>
-                        {responseText}
+                    <div style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "start",
+                        gap: "10px",
+                        marginBottom: '10px',
+                        minWidth: '400px',
+                        maxWidth: '600px',
+                        fontSize: '16px'
+                    }}>
+                        <div>{JSON.parse(aufgabeInput.task).task}</div>
+                        <div style={{ color: 'red' }}>Erwartetes Ergebnis:</div>
+                        <div> {JSON.parse(aufgabeInput.task).erwartetesErgebnis}</div>
                     </div>
                     <div>
                         {/* ThumbUp and ThumbDown IconButtons */}
@@ -102,31 +191,50 @@ const DraggableModal = ({responseText, onClose}) => {
                                 <div style={{margin: '0 10px'}}>
                                     Gute Aufgabe?
                                 </div>
-                                <IconButton color="primary" onClick={() => handleThumbClick(true)}>
+                                <IconButton color={isThumbsUpClicked ? 'success' : 'default'}
+                                            onClick={() => handleThumbUpClick(true)}>
                                     <ThumbUp fontSize="small"/>
                                 </IconButton>
-                                <IconButton color="secondary" onClick={() => handleThumbClick(false)}>
+                                <IconButton color={isThumbsDownClicked ? 'warning' : 'default'}
+                                            onClick={() => handleThumbDownClick(true)}>
                                     <ThumbDown fontSize="small"/>
                                 </IconButton></div>
-                            <div style={{display: 'flex', flexDirection: 'column'}}>
-                                <div>Schwierigkeitsgrad:</div>
-                                <div><Rating name="star-rating" value={starRating} max={3}
-                                             onChange={(event, newValue) => handleStarRatingChange(newValue)}/></div>
-                            </div>
+                            {isThumbsDownClicked && (
+                                <div>
+                                    <FormControl variant="standard" sx={{m: 1, minWidth: 120}}>
+                                        <InputLabel id="demo-simple-select-standard-label">Begründung</InputLabel>
+                                        <Select
+                                            labelId="demo-simple-select-standard-label"
+                                            id="demo-simple-select-standard"
+                                            value={aufgabeInput.begruendung}
+                                            onChange={handleChange}
+                                            label="Age"
+                                        >
+                                            {options.map((option) => (
+                                                <MenuItem key={option} value={option}>
+                                                    {option}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </div>)
+                            }
                             <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
-                                <Button variant="contained" color="success" onClick={onClose}>
+                                <Button variant="contained" color="success" disabled={solutionDisabled} style={{ width: 146 }}
+                                        onClick={() => checkSolution()}>
                                     Lösung
                                 </Button>
-                                <Button variant="contained" color="primary" onClick={onClose}>
-                                    Neue Aufgabe
+                                <Button variant="contained" color="primary" disabled={newTaskDisabled} style={{ width: 146 }}
+                                        onClick={() => newTask()}>
+                                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Neue Aufgabe'}
                                 </Button></div>
                         </div>
                     </div>
                 </div>
             </div>
         </Draggable>
+        </div>
     )
-        ;
 };
 
 export default DraggableModal;

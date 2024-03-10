@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useState} from "react";
+import React, {useContext, useState} from "react";
 import AppContext from "../contexts/AppContext";
 import CompilerService from "../services/CompilerService";
 import {toast, ToastContainer} from "react-toastify";
@@ -14,10 +14,8 @@ import SplitPane, {Pane} from 'split-pane-react';
 import 'split-pane-react/esm/themes/default.css'
 import GptExplainer from "./GptExplainer";
 import INITIAL_CODE from "../constants/CodeEditorConstants";
-import GenerateAssignmentService from "../services/GenerateAssignment";
 import DraggableModal from "./DraggableModal";
-import {db} from "../config/firebase"
-import {getDocs, collection} from "firebase/firestore"
+import SolutionAlert from "./SolutionAlert";
 
 
 /**
@@ -33,7 +31,10 @@ const Home = () => {
     const [aiHelpCompileError, setAiHelpCompileError] = useState('');
     const [tourRunning, setTourRunning] = useState(false);
     const [isDraggableOpen, setIsDraggableOpen] = useState(false);
-    const [assignmentText, setAssignmentText] = useState('');
+    const [exercise, setExercise] = useState('');
+    const [solution, setSolution] = useState();
+    const [showSolutionPopup, setShowSolutionPopup] = useState(false);
+    const [generateTaskDisabledButton, setGenerateTaskDisabledButton] = useState(false);
 
     const [sizesCodingAndAI, setSizesCodingAndAI] = useState([
         '70%',
@@ -78,23 +79,6 @@ const Home = () => {
             .then(handleCompileResult)
             .catch(stopLoading);
     }
-    const taskCollection = collection(db, "excercises")
-
-    useEffect(() => {
-        const getTask = async () => {
-            // READ THE DATA
-            try {
-                const data = await getDocs(taskCollection);
-                const filteredData = data.docs.map(doc => ({
-                    ...doc.data()
-                }));
-                console.log(filteredData);
-            } catch (err) {
-                console.error(err)
-            }
-        }
-        getTask();
-    },[]);
 
     /**
      * Handles the compile result and stops the loading screen.
@@ -179,8 +163,6 @@ const Home = () => {
 
     const handleCompileClick = () => sendCompileAndStatusRequests(code);
 
-    const handleAssignmentRequest = () => GenerateAssignmentService.sendAssignmentRequest().then((test) => console.log(test));
-
     /**
      * Will be called in the management bar component. Gpt service is called to explain code.
      * @param gptModel Desired gpt model
@@ -199,7 +181,6 @@ const Home = () => {
      * @param gptModel Desired gpt model
      */
     const handleAiHelperRequestClick = (gptModel) => {
-        console.log('test');
         setLoading(true);
         GptService.getCompileErrorHelp(code, compileOutput, gptModel).then(function (result) {
             setLoading(false);
@@ -248,16 +229,33 @@ const Home = () => {
 
     const handleCloseDraggable = () => {
         setIsDraggableOpen(false);
+        setGenerateTaskDisabledButton(false);
     };
 
     const handleOpenDraggable = (data) => {
+        setExercise(data);
+        setGenerateTaskDisabledButton(true);
         setIsDraggableOpen(true);
-        setAssignmentText(data);
+    };
+
+    const handleSolution = (data) => {
+        if (data !== undefined) {
+            console.log("test");
+            setShowSolutionPopup(true);
+            setSolution(JSON.parse(data))
+        }
+    }
+
+    const handleCloseAlert = () => {
+        setShowSolutionPopup(false);
     };
 
     return (
         <>{isDraggableOpen && (
-            <DraggableModal responseText={assignmentText} onClose={handleCloseDraggable}/>
+            <DraggableModal code={code}
+                            aufgabe={exercise}
+                            onClose={handleCloseDraggable}
+                            solution={handleSolution}/>
         )}
             <div className="App h-screen flex flex-col">
                 <JoyRideTutorial run={tourRunning} joyrideCallback={handleJoyrideCallback}/>
@@ -268,11 +266,11 @@ const Home = () => {
                     handleCompileErrorExplanation={handleAiHelperRequestClick}
                     handleExplainCode={handleExplainCodeClick}
                     compileStatus={compileStatus}
-                    handleAssignmentRequest={handleAssignmentRequest}
                     handleSaveCodeAsFile={handleSaveCodeAsFile}
                     updateCode={updateCode}
                     onChange={onChange}
                     handleDraggableOpen={handleOpenDraggable}
+                    generateTaskDisabled={generateTaskDisabledButton}
                 />
                 <div className="flex h-screen w-full">
                     <SplitPane
@@ -318,6 +316,7 @@ const Home = () => {
                         </Pane>
                     </SplitPane>
                 </div>
+                <SolutionAlert isOpen={showSolutionPopup} solution={solution} handleCloseAlert={handleCloseAlert}></SolutionAlert>
             </div>
         </>
     );

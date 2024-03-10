@@ -10,8 +10,15 @@ class GenerateAssignmentService extends Service {
             method: 'post',
             data: data
         });
-        console.log(response?.message);
-        return response?.message;
+        return response;
+    }
+
+    static async checkSolution(data) {
+        const response = await this.request('ai/solution', {
+            method: 'post',
+            data: data
+        })
+        return response;
     }
 }
 

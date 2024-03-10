@@ -2,15 +2,17 @@ const express = require('express');
 const openai = require('openai');
 const router = express.Router();
 const util = require('util');
-const {USER_PROMPT_COMPILE_ERROR, SYSTEM_PROMPT_COMPILE_ERROR,
-  USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT, USER_PROMPT_EXPLAIN_CODE, SYSTEM_PROMPT_EXPLAIN_CODE,
-  SYSTEM_PROMPT_GENERATE_TASK
+const {
+    USER_PROMPT_COMPILE_ERROR, SYSTEM_PROMPT_COMPILE_ERROR,
+    USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT, USER_PROMPT_EXPLAIN_CODE, SYSTEM_PROMPT_EXPLAIN_CODE,
+    SYSTEM_PROMPT_GENERATE_TASK, USER_PROMPT_SOLUTION_CODE_WITH_ASSIGNMENT, SYSTEM_PROMPT_SOLUTION
 } = require("../constants/GptPrompts");
-const {getTask} = require("../constants/PrompsExcerciseGenerator");
+const {mapTaskToChathistory, generatePromptHistory} = require("../service/GenerateTaskService");
 require('dotenv').config();
 
+
 const config = new openai.Configuration({
-  apiKey: process.env.OPENAI_API_KEY
+    apiKey: process.env.OPENAI_API_KEY
 });
 
 const openaiApi = new openai.OpenAIApi(config);
@@ -24,28 +26,28 @@ const openaiApi = new openai.OpenAIApi(config);
  * Returns: Generated better error message
  */
 router.post('/compiler-error', async (req, res) => {
-  const { code, error, model } = req.body;
-  const modelToUse = model || process.env.DEFAULT_CHAT_GPT_MODEL;
+    const {code, error, model} = req.body;
+    const modelToUse = model || process.env.DEFAULT_CHAT_GPT_MODEL;
 
-  try {
-    const response = await openaiApi.createChatCompletion({
-      model: modelToUse,
-      messages: [
-        {
-          role: 'system',
-          content: SYSTEM_PROMPT_COMPILE_ERROR
-        },
-        {
-          role: 'user',
-          content: util.format(USER_PROMPT_COMPILE_ERROR, code, error)
-        }
-      ]
-    });
-    res.json({ message: response.data.choices[0].message.content });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+    try {
+        const response = await openaiApi.createChatCompletion({
+            model: modelToUse,
+            messages: [
+                {
+                    role: 'system',
+                    content: SYSTEM_PROMPT_COMPILE_ERROR
+                },
+                {
+                    role: 'user',
+                    content: util.format(USER_PROMPT_COMPILE_ERROR, code, error)
+                }
+            ]
+        });
+        res.json({message: response.data.choices[0].message.content});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({error: 'Internal Server Error'});
+    }
 });
 
 /**
@@ -54,58 +56,79 @@ router.post('/compiler-error', async (req, res) => {
  * Returns: list of all current gpt model ids
  */
 router.get('/models', async (req, res) => {
-  try {
-    const response = await openaiApi.listModels();
-    const gptModels = response.data.data
-      .filter(item => item.id.includes('gpt'))
-      .map(item => item.id);
-    res.json({ models: gptModels });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+    try {
+        const response = await openaiApi.listModels();
+        const gptModels = response.data.data
+            .filter(item => item.id.includes('gpt'))
+            .map(item => item.id);
+        res.json({models: gptModels});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({error: 'Internal Server Error'});
+    }
 });
 
 router.post('/generateTask', async (req, res) => {
+    // TODO: change model conditially
+    const modelToUse = process.env.DEFAULT_CHAT_GPT_MODEL;
+    console.log(req.body);
+    const collectionName = 'exercises';
 
-  const modelToUse = process.env.DEFAULT_CHAT_GPT_MODEL;
+    // Extract mappedData to a constant
+    const chatHistory = await generatePromptHistory(collectionName, req);
+    console.log("ChatHistory - Backend");
+    console.log(chatHistory);
 
-  console.log("test", req.body);
+    try {
+        const response = await openaiApi.createChatCompletion({
+            //'gpt-4-turbo-preview'
+            model: modelToUse,
+            messages: chatHistory,
+            temperature: 0.9
+        });
+        const gptResponse = response.data.choices[0].message.content;
 
-  console.log("schwierigkeitsgrad", req.body.schwierigkeitsgrad);
+        const task = {
+            task: gptResponse,
+            aufgabentyp: req.body.aufgabentyp,
+            schwierigkeitsgrad: req.body.schwierigkeitsgrad,
+            experience: req.body.experience
+        }
 
-  const aufgabentyp = req.body.aufgabentyp;
-  const schwierigkeitsgrad = req.body.schwierigkeitsgrad;
-
-  const aufgabentyp2 = getTask(aufgabentyp);
-  console.log(aufgabentyp2);
-
-  const chatHistory = [
-    { role: 'system', content: 'Du bist ein hilfreiches Programm und sollst Programmieraufgaben für Anfänger generieren.' },
-    { role: 'assistant', content: 'Deklariere eine Variable mit dem Variablennamen `zahl` vom Datentyp `int` und initialisiere sie mit dem Wert 5.' },
-    { role: 'user', content: 'Das ist eine gute Aufgabe für Anfänger, weil sie leicht ist.' },
-    { role: 'assistant', content: 'Bestimme den Datentyp und den Wert der folgenden Ausdrücke: 7 % 2'},
-    { role: 'user', content: 'Das ist eine gute Aufgabe für Anfänger, weil sie mittel ist.'},
-    { role: 'system', content: 'Generiere eine komplett neue Aufgaben, die gut für Anfänger ist!' },
-  ];
-
-
-  try {
-    const response = await openaiApi.createChatCompletion({
-      model: modelToUse,
-      messages:
-        chatHistory,
-      temperature: 0.2
-    });
-    const gptResponse = response.data.choices[0].message.content;
-
-    res.json({ message: gptResponse });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+        res.status(200).json(task);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({error: 'Internal Server Error'});
+    }
 });
 
+router.post('/solution', async (req, res) => {
+    console.log(req.body);
+    const modelToUse = process.env.DEFAULT_CHAT_GPT_MODEL;
+    const promptToUse = util.format(USER_PROMPT_SOLUTION_CODE_WITH_ASSIGNMENT, req.body.code, req.body.aufgabe)
+    console.log(promptToUse);
+    try {
+        const response = await openaiApi.createChatCompletion({
+            model: modelToUse,
+            messages: [
+                {
+                    role: 'system',
+                    content: SYSTEM_PROMPT_SOLUTION
+                },
+                {
+                    role: 'user',
+                    content: promptToUse
+                }
+            ],
+            temperature: 0.2
+        });
+        const gptResponse = response.data.choices[0].message.content;
+
+        res.status(200).json(gptResponse);
+    } catch (err) {
+
+    }
+});
 /**
  * Endpoint for "Fehlerkommentator" in frontend.
  * Calls the gpt api with system and user prompt to let gpt explain user code.
@@ -115,35 +138,36 @@ router.post('/generateTask', async (req, res) => {
  * Returns: Code explanation
  */
 router.post('/explain', async (req, res) => {
-  const { code, assignment, model } = req.body;
-  const modelToUse = model || process.env.DEFAULT_CHAT_GPT_MODEL;
+    const {code, assignment, model} = req.body;
+    const modelToUse = model || process.env.DEFAULT_CHAT_GPT_MODEL;
+    console.log(modelToUse);
 
-  const promptToUse = assignment
-    ? util.format(USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT, code, assignment)
-    : util.format(USER_PROMPT_EXPLAIN_CODE, code);
+    const promptToUse = assignment
+        ? util.format(USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT, code, assignment)
+        : util.format(USER_PROMPT_EXPLAIN_CODE, code);
 
-  try {
-    const response = await openaiApi.createChatCompletion({
-      model: modelToUse,
-      messages: [
-        {
-          role: 'system',
-          content: SYSTEM_PROMPT_EXPLAIN_CODE
-        },
-        {
-          role: 'user',
-          content: promptToUse
-        }
-      ],
-      temperature: 0.2
-    });
-    const gptResponse = response.data.choices[0].message.content;
+    try {
+        const response = await openaiApi.createChatCompletion({
+            model: modelToUse,
+            messages: [
+                {
+                    role: 'system',
+                    content: SYSTEM_PROMPT_EXPLAIN_CODE
+                },
+                {
+                    role: 'user',
+                    content: promptToUse
+                }
+            ],
+            temperature: 0.2
+        });
+        const gptResponse = response.data.choices[0].message.content;
 
-    res.json({ message: gptResponse });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+        res.json({message: gptResponse});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({error: 'Internal Server Error'});
+    }
 });
 
 module.exports = router;

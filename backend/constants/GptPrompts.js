@@ -1,4 +1,5 @@
-const SYSTEM_PROMPT_COMPILE_ERROR =`
+const db = require("../config/firebaseAdminConfig");
+const SYSTEM_PROMPT_COMPILE_ERROR = `
 Du bist ein Helfer für Programmieranfänger. Du bekommst Javacode und einen Kompilierfehler oder Laufzeitfehler.
 Erkläre verständlich für einen Anfänger, warum der Fehler auftritt und gebe einen Hinweis, wie man ihn beheben könnte.
 Halte dich kurz, aber ausreichend, damit ein Anfänger alles versteht. Schreibe in einem positiven Ton. 
@@ -111,18 +112,25 @@ const SYSTEM_PROMPT_GENERATE_TASK = `
 Du bist ein Helfer um Programmieraufgaben für Anfänger zu generieren.
 Schreibe eine Aufgabe und wechle die Sturktur der Aufgaben`;
 
+const SYSTEM_PROMPT_SOLUTION = `Du bekommst eine Aufgabe und Java Code. Du sollst überpüfen, ob der Java Code die Aufgabe korrekt löst. 
+Gebe nur folgendes Format zurück und nichts anderes:
+{"success: true wenn der Code die Aufgabenstellung korrekt löst, sonst false", "message": "Gebe hier einen Hinweis, wie man die Aufgabe lösen könnte"}`
+const USER_PROMPT_SOLUTION_CODE_WITH_ASSIGNMENT = 'Hier der Code\n\n%s\n\nHier die Aufgabe dazu\n\n%s';
+
 
 module.exports = {
-  SYSTEM_PROMPT_COMPILE_ERROR,
-  USER_PROMPT_COMPILE_ERROR,
-  USER_PROMPT_EVALUATE_DEFAULT,
-  USER_PROMPT_EVALUATE_WITH_ASSIGNMENT_DEFAULT,
-  USER_PROMPT_EXPLAIN_CODE,
-  USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT,
-  SYSTEM_PROMPT_EXPLAIN_CODE,
-  SYSTEM_PROMPT_EVALUATION_FIND_MISTAKES,
-  USER_PROMPT_EVALUATE_HELP,
-  USER_PROMPT_EVALUATE_HELP_WITH_ASSIGNMENT,
-  SYSTEM_PROMPT_EVALUATE_HELP,
-  SYSTEM_PROMPT_GENERATE_TASK
+    SYSTEM_PROMPT_COMPILE_ERROR,
+    USER_PROMPT_COMPILE_ERROR,
+    USER_PROMPT_EVALUATE_DEFAULT,
+    USER_PROMPT_EVALUATE_WITH_ASSIGNMENT_DEFAULT,
+    USER_PROMPT_EXPLAIN_CODE,
+    USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT,
+    SYSTEM_PROMPT_EXPLAIN_CODE,
+    SYSTEM_PROMPT_EVALUATION_FIND_MISTAKES,
+    USER_PROMPT_EVALUATE_HELP,
+    USER_PROMPT_EVALUATE_HELP_WITH_ASSIGNMENT,
+    SYSTEM_PROMPT_EVALUATE_HELP,
+    SYSTEM_PROMPT_GENERATE_TASK,
+    SYSTEM_PROMPT_SOLUTION,
+    USER_PROMPT_SOLUTION_CODE_WITH_ASSIGNMENT
 }

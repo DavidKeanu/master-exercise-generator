@@ -5,25 +5,21 @@ import Service from "./Service";
  */
 class DbService extends Service {
 
-  static errorMessage = 'Fehler beim Erstellen der Sitzung';
+    static errorMessage = 'Fehler beim Erstellen der Sitzung';
 
-  /**
-   * Creates a session in the database
-   * @param matrikelnummer Matrikelnummer of the student
-   * @returns {Promise<string>} Returns the newly created sitzung_id
-   */
-  static async createSession(matrikelnummer) {
-    const data = {
-      matrikelnummer: matrikelnummer
+    /**
+     * Creates a session in the database
+     * @returns {Promise<string>} Returns the newly created sitzung_id
+     * @param excercise
+     */
+    static async updateTask(excercise) {
+        const response = await this.request('db/addOrUpdateTask', {
+            method: 'post',
+            data: excercise
+        });
+
+        return response;
     }
-
-    const response = await this.request('db/create-session', {
-      method: 'post',
-      data: data
-    });
-
-    return response.sitzung_id;
-  }
 }
 
 export default DbService;

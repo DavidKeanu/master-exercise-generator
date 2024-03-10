@@ -4,7 +4,7 @@ import {AppBar, IconButton, Toolbar} from "@mui/material";
 import {Lightbulb, PlayArrow, QuestionMark, Save, Task, UploadFile} from "@mui/icons-material";
 import SelectGptModels from "./SelectGptModels";
 import Box from "@mui/material/Box";
-import CardListDialog from "./ConceptDialog";
+import ConceptDialog from "./ConceptDialog";
 
 /**
  * Bar on top of the editor. Each editor function is called from here.
@@ -18,6 +18,7 @@ const ManagementBar = (props) => {
         handleCompileErrorExplanation,
         handleSaveCodeAsFile,
         updateCode,
+        generateTaskDisabled,
         handleDraggableOpen
     } = props;
 
@@ -35,7 +36,6 @@ const ManagementBar = (props) => {
     // Function to receive data from the child
     const handleDataFromChild = (data) => {
         // Do something with the data in the parent component
-        console.log(data);
         handleDraggableOpen(data);
     };
 
@@ -79,16 +79,6 @@ const ManagementBar = (props) => {
         setShowAssignmentOverlay(checked);
     }, []);
 
-    /**
-     * Returns assignment formatted.
-     */
-    const assignmentTextAsLines = useMemo(() => assignmentText
-        .split('\n')
-        .map((line, i) =>
-            <div className='ml-2 mr-2' key={i}>
-                {line.trim().length > 0 ? line.trim() : <br/>}
-            </div>
-        ), [assignmentText]);
     return (
         <>
             <AppBar position="static" sx={{backgroundColor: 'white'}}>
@@ -138,7 +128,7 @@ const ManagementBar = (props) => {
                     <Box sx={{
                         display: 'flex', justifyContent: 'center', alignItems: 'center', // Center vertically
                     }}>
-                        <CardListDialog sendDataToParent={handleDataFromChild}/>
+                        <ConceptDialog sendDataToParent={handleDataFromChild} generateTaskDisbaled={generateTaskDisabled}/>
                         <button className="bg-red-500 flex-end hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
                                 onClick={startHelpTour}
                                 title="Hilfe anzeigen">
