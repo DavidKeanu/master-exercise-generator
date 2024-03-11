@@ -1,8 +1,8 @@
 const express = require('express');
-const Axios = require('axios');
+const axiosR = require('axios');
 const router = express.Router();
 
-const axios = Axios.create({
+const axios = axiosR.create({
   baseURL: process.env.RAPID_API_JUDGE0_URL,
   headers: {
     "content-type": "application/json",
