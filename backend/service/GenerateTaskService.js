@@ -1,5 +1,11 @@
 const db = require("../config/firebaseAdminConfig");
-
+/**
+ * Maps an ID to an object containing information about the corresponding task category (Aufgabentyp).
+ * @function
+ * @param {number} id - The numerical identifier of the task category.
+ * @returns {Object} - An object containing information about the task category, including Aufgabentyp and Lernziele.
+ * @author David Nutzinger
+ */
 function mapAufgabentyp(id) {
     switch (id) {
         case 0:
@@ -22,8 +28,16 @@ function mapAufgabentyp(id) {
             console.log("The number is not one, two, or three.");
     }
 }
-
-function mapBegrudnungPrompt(begruendung) {
+/**
+ * Maps a justification reason to a corresponding prompt for generating a new task.
+ *
+ * @function
+ * @name mapBegruednungPrompt
+ * @param {string} begruendung - The justification reason provided by the user.
+ * @returns {string} - A user-friendly prompt suggesting actions for generating a new task.
+ * @author David Nutzinger
+*/
+function mapBegruednungPrompt(begruendung) {
     switch (begruendung) {
         case "zu leicht":
             return "Die Aufgabe ist zu leicht. Generiere eine neue Aufgabe die etwas schwerer ist und sich inhaltlich von der vorherigen unterscheidet. " +
@@ -35,14 +49,24 @@ function mapBegrudnungPrompt(begruendung) {
             console.log("The number is not one, two, or three.");
     }
 }
-
+/**
+ * Generates a prompt history for a chat-based interaction involving the creation of programming tasks.
+ * This asynchronous function creates a chat history based on the provided parameters and the existing data
+ * @async
+ * @function
+ * @name generatePromptHistory
+ * @param {string} collectionName - The name of the Firestore collection to query for existing tasks.
+ * @param {Object} req - The Express.js request object containing parameters for task generation.
+ * @returns {Array<Object>} - An array representing the chat history with role and content attributes for each message.
+ * @author David Nutzinger
+ */
 const generatePromptHistory = async (collectionName, req) => {
     const aufgabentyp = mapAufgabentyp(req.body.aufgabentyp);
     const startMessage = {
         role: 'system', content: 'Du bist ein Assistent um Programmieraufgaben für Anfänger zu generieren. ' +
             `Du sollst eine Aufgabe für ${aufgabentyp.aufgabentyp} in Java erstellen. Keine Objektorientierung. ` +
             `Wähle aus einem Lernziel aus. Lernziele sind: ${aufgabentyp.lernziele}` +
-            `Erstelle eine Aufgabe für das Erfahrungsniveau ${req.body.experience} (1 bis 5) und dem Schwierigkeitsgrad ${req.body.schwierigkeitsgrad} (1 bis 3). ` +
+            `Erstelle eine Aufgabe für das Erfahrungsniveau ${req.body.erfahrung} (1 bis 5) und dem Schwierigkeitsgrad ${req.body.schwierigkeitsgrad} (1 bis 3). ` +
             'Suche dir zufällig ein Lernziel aus, für die du eine Aufgabe generierst'+
             'Vermeide Berechnungen die Vorwissen benötigen.' +
             'Die Aufgabe sollte nicht mehr als drei kurze Sätze haben und ein erwartetes Ergebnis beinhalten' +
@@ -64,13 +88,14 @@ const generatePromptHistory = async (collectionName, req) => {
             content: req.body.aufgabe
         }, {
             role: 'system',
-            content: mapBegrudnungPrompt(req.body.begruendung)
+            content: mapBegruednungPrompt(req.body.begruendung)
         }]
         prompt.unshift(startMessage);
         return prompt;
     }
     try {
         const collectionRef = db.collection(collectionName);
+        // filter for relevant documents from the db
         const snapshot = await collectionRef
             .where('aufgabentyp', '==', req.body.aufgabentyp)
             .where('erfahrung', '==', req.body.erfahrung)
@@ -91,7 +116,6 @@ const generatePromptHistory = async (collectionName, req) => {
             ];
         });
         const chatHistory = mappedData.flat();
-        // Add a message at the front
         // message at the front and the existing chatHistory
         chatHistory.unshift(startMessage);
         chatHistory.push(endMessage);

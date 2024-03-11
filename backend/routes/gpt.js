@@ -5,9 +5,9 @@ const util = require('util');
 const {
     USER_PROMPT_COMPILE_ERROR, SYSTEM_PROMPT_COMPILE_ERROR,
     USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT, USER_PROMPT_EXPLAIN_CODE, SYSTEM_PROMPT_EXPLAIN_CODE,
-    SYSTEM_PROMPT_GENERATE_TASK, USER_PROMPT_SOLUTION_CODE_WITH_ASSIGNMENT, SYSTEM_PROMPT_SOLUTION
+    USER_PROMPT_SOLUTION_CODE_WITH_ASSIGNMENT, SYSTEM_PROMPT_SOLUTION
 } = require("../constants/GptPrompts");
-const {mapTaskToChathistory, generatePromptHistory} = require("../service/GenerateTaskService");
+const {generatePromptHistory} = require("../service/GenerateTaskService");
 require('dotenv').config();
 
 
@@ -67,7 +67,18 @@ router.get('/models', async (req, res) => {
         res.status(500).json({error: 'Internal Server Error'});
     }
 });
-
+/**
+ * Generates a programming task based on the provided parameters and chat history.
+ * This route handler processes a POST request to generate a programming task using the OpenAI GPT model.
+ * It extracts relevant information from the request, generates a chat history using the `generatePromptHistory` function,
+ * @function
+ * @name POST /generateTask
+ * @param {Object} req - The Express.js request object containing parameters for task generation.
+ * @param {Object} res - The Express.js response object.
+ * @returns {void}
+ * @throws {Error} Throws an error if there is an issue during the OpenAI API request or data extraction process.
+ * @author David Nutzinger
+ */
 router.post('/generateTask', async (req, res) => {
     // TODO: change model conditially
     const modelToUse = process.env.DEFAULT_CHAT_GPT_MODEL;
@@ -75,8 +86,8 @@ router.post('/generateTask', async (req, res) => {
 
     // Extract mappedData to a constant
     const chatHistory = await generatePromptHistory(collectionName, req);
-    console.log("ChatHistory - Backend");
-    console.log(chatHistory);
+    console.info("ChatHistory - Backend");
+    console.info(chatHistory);
 
     try {
         const response = await openaiApi.createChatCompletion({
@@ -100,7 +111,17 @@ router.post('/generateTask', async (req, res) => {
         res.status(500).json({error: 'Internal Server Error'});
     }
 });
-
+/**
+ * Generates a solution for a programming task based on the provided code and task information.
+ * This route handler processes a POST request to generate a solution for a programming task using the OpenAI GPT model.
+ * @function
+ * @name POST /solution
+ * @param {Object} req - The Express.js request object containing parameters for solution generation.
+ * @param {Object} res - The Express.js response object.
+ * @returns {void}
+ * @throws {Error} Throws an error if there is an issue during the OpenAI API request or data extraction process.
+ * @author David Nutzinger
+ */
 router.post('/solution', async (req, res) => {
     const modelToUse = process.env.DEFAULT_CHAT_GPT_MODEL;
     const promptToUse = util.format(USER_PROMPT_SOLUTION_CODE_WITH_ASSIGNMENT, req.body.code, req.body.aufgabe)
@@ -123,7 +144,7 @@ router.post('/solution', async (req, res) => {
 
         res.status(200).json(gptResponse);
     } catch (err) {
-
+        console.error(err);
     }
 });
 /**
