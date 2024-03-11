@@ -1,8 +1,8 @@
 const express = require('express');
-const axiosR = require('axios');
+const axios = require('axios');
 const router = express.Router();
 
-const axios = axiosR.create({
+const axiosR = axios.create({
   baseURL: process.env.RAPID_API_JUDGE0_URL,
   headers: {
     "content-type": "application/json",
@@ -25,7 +25,7 @@ router.post('/compile-token', async (req, res) => {
   };
 
   try {
-    const response = await axios.post('/', data, { params: { base64_encoded: 'true', fields: '*' } });
+    const response = await axiosR.post('/', data, { params: { base64_encoded: 'true', fields: '*' } });
     res.json({token: response.data.token});
   }
   catch (err) {
@@ -52,7 +52,7 @@ async function sendCodeCompileStatusRequest(req, res, next, attempt) {
   const { token } = req.body;
 
   try {
-    const response = await axios.get(`/${token}`, { params: { base64_encoded: "true", fields: "*" } });
+    const response = await axiosR.get(`/${token}`, { params: { base64_encoded: "true", fields: "*" } });
     const statusId = response.data.status?.id;
 
     if ((statusId === 1 || statusId === 2) && attempt < 10 ) {
