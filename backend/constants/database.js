@@ -1,9 +1,8 @@
 const admin = require("firebase-admin");
 const addTaskToFirestoreDb = async (documentData) => {
     try {
-        console.log()
         const db = admin.firestore();
-        const collectionRef = db.collection("exercises");
+        const collectionRef = db.collection("aufgaben");
         console.log(documentData);
         // Add the document to the Firestore collection
         const docRef = await collectionRef.add(documentData);

@@ -71,7 +71,7 @@ router.get('/models', async (req, res) => {
 router.post('/generateTask', async (req, res) => {
     // TODO: change model conditially
     const modelToUse = process.env.DEFAULT_CHAT_GPT_MODEL;
-    const collectionName = 'exercises';
+    const collectionName = 'aufgaben';
 
     // Extract mappedData to a constant
     const chatHistory = await generatePromptHistory(collectionName, req);
@@ -88,10 +88,10 @@ router.post('/generateTask', async (req, res) => {
         const gptResponse = response.data.choices[0].message.content;
 
         const task = {
-            task: gptResponse,
+            aufgabe: gptResponse,
             aufgabentyp: req.body.aufgabentyp,
             schwierigkeitsgrad: req.body.schwierigkeitsgrad,
-            experience: req.body.experience
+            erfahrung: req.body.erfahrung
         }
 
         res.status(200).json(task);
@@ -104,7 +104,6 @@ router.post('/generateTask', async (req, res) => {
 router.post('/solution', async (req, res) => {
     const modelToUse = process.env.DEFAULT_CHAT_GPT_MODEL;
     const promptToUse = util.format(USER_PROMPT_SOLUTION_CODE_WITH_ASSIGNMENT, req.body.code, req.body.aufgabe)
-    console.log(promptToUse);
     try {
         const response = await openaiApi.createChatCompletion({
             model: modelToUse,

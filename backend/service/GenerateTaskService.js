@@ -49,19 +49,19 @@ const generatePromptHistory = async (collectionName, req) => {
             'Das erwartete Ergebnis, ist das was der User machen soll, um die Aufgabe zu lösen' +
             'Achte darauf, dass das erwartete Ergbnis nicht Lösung vorgibt.' +
             'Bitte gebe nur folgendes Format zurück:' +
-            '{"task": "die Aufgabe", "erwartetesErgebnis": "Das erwartete Ergebnis der Aufgabe"}'
+            '{"aufgabe": "die Aufgabe", "erwartetesErgebnis": "Das erwartete Ergebnis der Aufgabe"}'
     }
     const endMessage = {
         role: 'system', content: 'Generiere eine neue Aufgabe, die sich inhaltlich stark von' +
             'den vorherigen Aufgaben unterscheidet. Sei kreativ und denke dir unterschiedliche Aufgabenstellungen aus.' +
             'Wähle zufällig ein Lernziel' +
-            'Geben folgendens JSON-Format zurück: {"task": "Die Aufgabe", "erwartetesErgebnis": "Das erwartete Ergebnis der Aufgabe"}.'
+            'Geben folgendens JSON-Format zurück: {"aufgabe": "Die Aufgabe", "erwartetesErgebnis": "Das erwartete Ergebnis der Aufgabe"}.'
     }
 
-    if (req.body.isGoodTask === false && req.body.begruendung !== "Aufgabe wiederholt sich.") {
+    if (req.body.istGuteAufgabe === false && req.body.begruendung !== "Aufgabe wiederholt sich.") {
         const prompt = [{
             role: 'assistant',
-            content: req.body.task
+            content: req.body.aufgabe
         }, {
             role: 'system',
             content: mapBegrudnungPrompt(req.body.begruendung)
@@ -73,9 +73,9 @@ const generatePromptHistory = async (collectionName, req) => {
         const collectionRef = db.collection(collectionName);
         const snapshot = await collectionRef
             .where('aufgabentyp', '==', req.body.aufgabentyp)
-            .where('experience', '==', req.body.experience)
+            .where('erfahrung', '==', req.body.erfahrung)
             .where('schwierigkeitsgrad', '==', req.body.schwierigkeitsgrad)
-            .where('isGoodTask', '==', true).get();
+            .where('istGuteAufgabe', '==', true).get();
 
         if (snapshot.empty) {
             return [
@@ -85,7 +85,7 @@ const generatePromptHistory = async (collectionName, req) => {
         const mappedData = snapshot.docs.map((doc) => {
             const obj = {id: doc.id, ...doc.data()};
 
-            const assistantContent = obj.task;
+            const assistantContent = obj.aufgabe;
             return [
                 {role: 'assistant', content: assistantContent}
             ];

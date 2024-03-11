@@ -9,10 +9,8 @@ import generateAssignmentService from "../../services/GenerateAssignment";
 import INITIAL_CODE from "../../constants/CodeEditorConstants";
 
 
-const DraggableModal = ({aufgabe, code, onClose, solution}) => {
+const TaskModal = ({aufgabe, code, onClose, solution}) => {
 
-    // State and setter function
-    //const [task, setTask] = useState("");
     const [loading, setLoading] = useState(false);
     const [loadingSolution, setLoadingSolution] = useState(false);
     const [begruendung, setBegruendung] = useState('');
@@ -23,42 +21,49 @@ const DraggableModal = ({aufgabe, code, onClose, solution}) => {
     const [isButtonDisabled, setIsButtonDisabled] = useState(true);
     const [aufgabeInput, setAufgabeInput] = useState(aufgabe);
     const options = ['zu leicht', 'zu schwer', 'Aufgabe wiederholt sich.'];
-
+    /**
+     * Updates a task property with the provided field updates, both locally and in the database.
+     * @param {Object} fieldUpdates - The field updates to be applied to the task property.
+     * @returns {Promise<void>} - A Promise that resolves once the update process is complete.
+     * @throws {Error} - Throws an error if there is an issue during the update process.
+     * @author David Nutzinger
+     */
     const updateTaskProperty = async (fieldUpdates) => {
-        // Fetch the updatedTask directly from the local state
-        console.log("aufgabeInput:")
-        console.log(aufgabeInput);
         const updatedTask = {
             ...aufgabeInput,
             ...fieldUpdates
         };
-        // Now, perform the asynchronous update with dbService
+        // perform the asynchronous update with dbService
         const response = await dbService.updateTask(updatedTask);
-        // Update the local state and log the updated task after the state has been set
         // Update the local state
         setAufgabeInput({...updatedTask, id: response.id});
-
     };
 
-    useEffect(() => {
-        // Log the updated task when aufgabeInput changes
-        // Skip the effect on the initial render
-        console.log("UpdateTask Frontend");
-        console.log(aufgabeInput);
-    }, [aufgabeInput]); // Add aufgabeInput as a dependency to watch for changes
+    useEffect(() => {}, [aufgabeInput]);
 
+    /**
+     * Handles the change in the 'begruendung' value, updating state and triggering related actions.
+     *
+     * @param {event} - The change event triggered by the input element.
+     * @returns {Promise<void>} - A Promise that resolves once the change handling process is complete.
+     * @author David Nutzinger
+     */
     const handleChange = async (event) => {
         setBegruendung(event.target.value);
         if (begruendung === '') {
             setNewTaskDisabled(true);
             setSolutionDisabled(true);
         }
-        await updateTaskProperty({isGoodTask: false, begruendung: event.target.value});
+        await updateTaskProperty({istGuteAufgabe: false, begruendung: event.target.value});
         setIsButtonDisabled(false);
         setSolutionDisabled(true);
         setNewTaskDisabled(false);
     };
-
+    /**
+     * Handles the click event on the Thumb Up button, updating related states and triggering actions.
+     * @returns {Promise<void>} - A Promise that resolves once the click handling process is complete.
+     * @author David Nutzinger
+     */
     const handleThumbUpClick = async () => {
         if (!isThumbsUpClicked) {
             setThumbsUpClicked(true);
@@ -67,7 +72,7 @@ const DraggableModal = ({aufgabe, code, onClose, solution}) => {
             setIsButtonDisabled(false);
             setBegruendung('');
             setNewTaskDisabled(false);
-            await updateTaskProperty({isGoodTask: true, begruendung: begruendung});
+            await updateTaskProperty({istGuteAufgabe: true, begruendung: ''});
         } else {
             setThumbsUpClicked(false);
             setIsButtonDisabled(true);
@@ -75,13 +80,17 @@ const DraggableModal = ({aufgabe, code, onClose, solution}) => {
             setNewTaskDisabled(true);
         }
     };
+    /**
+     * Handles the click event on the Thumb Down button, updating related states and triggering actions.
+     * @returns {Promise<void>} - A Promise that resolves once the click handling process is complete.
+     * @author David Nutzinger
+     */
     const handleThumbDownClick = async () => {
         if (!isThumbsDownClicked) {
             setThumbsDownClicked(true);
             if (begruendung === "") {
                 setIsButtonDisabled(true);
             }
-            //await updateTaskProperty({isGoodTask: false,  begruendung: begruendung});
             if (isThumbsUpClicked) {
                 setSolutionDisabled(true);
                 setNewTaskDisabled(true);
@@ -95,28 +104,32 @@ const DraggableModal = ({aufgabe, code, onClose, solution}) => {
             setNewTaskDisabled(true);
         }
     };
-
-    const newTask = async () => {
+    /**
+     * Generates a new task by sending a request to the backend and updating the local state accordingly.
+     * @returns {Promise<void>} - A Promise that resolves once the new task generation process is complete.
+     * @author David Nutzinger
+     */
+    const generateNewTask = async () => {
         try {
             setLoading(true);
 
             const data = {
                 aufgabentyp: aufgabeInput.aufgabentyp,
                 schwierigkeitsgrad: aufgabeInput.schwierigkeitsgrad,
-                experience: aufgabeInput.experience,
+                erfahrung: aufgabeInput.erfahrung,
                 begruendung: aufgabeInput.begruendung,
-                isGoodTask: aufgabeInput.isGoodTask,
-                task: aufgabeInput.task
+                istGuteAufgabe: aufgabeInput.istGuteAufgabe,
+                aufgabe: aufgabeInput.aufgabe
             };
-
+            console.log(data);
             // Call the sendAssignmentRequest method
             const response = await generateAssignmentService.sendAssignmentRequest(data);
 
             const responseFromBackend = {
                 aufgabentyp: response.aufgabentyp,
                 schwierigkeitsgrad: response.schwierigkeitsgrad,
-                experience: response.experience,
-                task: response.task
+                erfahrung: response.erfahrung,
+                aufgabe: response.aufgabe
             };
 
             setThumbsUpClicked(false);
@@ -130,10 +143,18 @@ const DraggableModal = ({aufgabe, code, onClose, solution}) => {
             setLoading(false);
         }
     };
-
+    /**
+     * Checks the solution for the current task by sending a request to the backend.
+     *
+     * @returns {Promise<void>} - A Promise that resolves once the solution checking process is complete.
+     * @param {string} code - The code to be checked for the solution.
+     * @param {Function} solution - The callback function to handle the solution result.
+     * @throws {Error} - Throws an error if there is an issue during the solution checking process.
+     * @author David Nutzinger
+     */
     const checkSolution = async () => {
         const solutionObject = {
-            aufgabe: aufgabeInput.task,
+            aufgabe: aufgabeInput.aufgabe,
             code: code,
         }
         if (code === INITIAL_CODE) {
@@ -145,7 +166,12 @@ const DraggableModal = ({aufgabe, code, onClose, solution}) => {
             solution(JSON.parse(solutionFromGpt));
         }
     };
-
+    /**
+     * Maps an ID to a corresponding task category (Aufgabe) name.
+     * @param {number} id - The numerical identifier of the task category.
+     * @returns {string} - The corresponding task category (Aufgabe) name.
+     * @author David Nutzinger
+     */
     const mapIdToAufgabe = (id) => {
         switch (id) {
             case 0:
@@ -154,7 +180,6 @@ const DraggableModal = ({aufgabe, code, onClose, solution}) => {
                 return 'Arrays';
             case 2:
                 return 'Schleifen';
-            // Add more cases as needed
             default:
                 return 'Unknown';
         }
@@ -182,9 +207,9 @@ const DraggableModal = ({aufgabe, code, onClose, solution}) => {
                             maxWidth: '600px',
                             fontSize: '16px'
                         }}>
-                            <div>{JSON.parse(aufgabeInput.task).task}</div>
+                            <div>{JSON.parse(aufgabeInput.aufgabe).aufgabe}</div>
                             <div style={{color: 'red'}}>Erwartetes Ergebnis:</div>
-                            <div> {JSON.parse(aufgabeInput.task).erwartetesErgebnis}</div>
+                            <div> {JSON.parse(aufgabeInput.aufgabe).erwartetesErgebnis}</div>
                         </div>
                         <div>
                             {/* ThumbUp and ThumbDown IconButtons */}
@@ -234,7 +259,7 @@ const DraggableModal = ({aufgabe, code, onClose, solution}) => {
                                     </Button>
                                     <Button variant="contained" color="primary" disabled={newTaskDisabled}
                                             style={{width: 146}}
-                                            onClick={() => newTask()}>
+                                            onClick={() => generateNewTask()}>
                                         {loading ? <CircularProgress size={24} color="inherit"/> : 'Neue Aufgabe'}
                                     </Button></div>
                             </div>
@@ -246,4 +271,4 @@ const DraggableModal = ({aufgabe, code, onClose, solution}) => {
     )
 };
 
-export default DraggableModal;
+export default TaskModal;

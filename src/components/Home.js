@@ -14,7 +14,7 @@ import SplitPane, {Pane} from 'split-pane-react';
 import 'split-pane-react/esm/themes/default.css'
 import GptExplainer from "./GptExplainer";
 import INITIAL_CODE from "../constants/CodeEditorConstants";
-import DraggableModal from "./generateAssignment/DraggableModal";
+import TaskModal from "./generateAssignment/TaskModal";
 import SolutionAlert from "./generateAssignment/SolutionAlert";
 
 
@@ -252,10 +252,10 @@ const Home = () => {
 
     return (
         <>{isDraggableOpen && (
-            <DraggableModal code={code}
-                            aufgabe={exercise}
-                            onClose={handleCloseDraggable}
-                            solution={handleSolution}/>
+            <TaskModal code={code}
+                       aufgabe={exercise}
+                       onClose={handleCloseDraggable}
+                       solution={handleSolution}/>
         )}
             <div className="App h-screen flex flex-col">
                 <JoyRideTutorial run={tourRunning} joyrideCallback={handleJoyrideCallback}/>

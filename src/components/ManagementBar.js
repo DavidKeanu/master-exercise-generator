@@ -4,7 +4,7 @@ import {AppBar, IconButton, Toolbar} from "@mui/material";
 import {Lightbulb, PlayArrow, QuestionMark, Save, Task, UploadFile} from "@mui/icons-material";
 import SelectGptModels from "./SelectGptModels";
 import Box from "@mui/material/Box";
-import ConceptDialog from "./generateAssignment/ConceptDialog";
+import AssignmentDialog from "./generateAssignment/AssignmentDialog";
 
 /**
  * Bar on top of the editor. Each editor function is called from here.
@@ -34,9 +34,9 @@ const ManagementBar = (props) => {
     const fileInputRef = useRef(null);
 
     // Function to receive data from the child
-    const handleDataFromChild = (data) => {
+    const handleDataFromChild = (aufgabe) => {
         // Do something with the data in the parent component
-        handleDraggableOpen(data);
+        handleDraggableOpen(aufgabe);
     };
 
     const handleButtonClick = () => {
@@ -128,7 +128,7 @@ const ManagementBar = (props) => {
                     <Box sx={{
                         display: 'flex', justifyContent: 'center', alignItems: 'center', // Center vertically
                     }}>
-                        <ConceptDialog sendDataToParent={handleDataFromChild} generateTaskDisbaled={generateTaskDisabled}/>
+                        <AssignmentDialog sendDataToParent={handleDataFromChild} generateTaskDisbaled={generateTaskDisabled}/>
                         <button className="bg-red-500 flex-end hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
                                 onClick={startHelpTour}
                                 title="Hilfe anzeigen">

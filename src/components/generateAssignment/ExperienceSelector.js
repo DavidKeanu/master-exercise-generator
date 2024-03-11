@@ -3,7 +3,12 @@ import {Box, FormControl, InputLabel, MenuItem, Select,} from '@mui/material';
 
 const ExperienceSelector = ({onExperienceChange, experience}) => {
     const [selectedValue, setSelectedValue] = useState(experience);
-
+    /**
+     * Handles the change in the selected value and triggers a callback function.
+     * @param {event} - The change event triggered by the input element.
+     * @returns {void} - This function does not return a value.
+     * @author David Nutzinger
+     */
     const handleChange = (event) => {
         const newValue = event.target.value;
         setSelectedValue(newValue);

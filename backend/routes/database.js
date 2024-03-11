@@ -12,7 +12,7 @@ router.post('/addOrUpdateTask', async (req, res) => {
             console.log("addOrUpdateTask - Adding a new document");
 
             const db = admin.firestore();
-            const newExerciseRef = await db.collection('exercises').add(dataToUpdate);
+            const newExerciseRef = await db.collection('aufgaben').add(dataToUpdate);
             const newExerciseId = newExerciseRef.id;
 
             res.status(201).json({ success: true, message: 'Document added successfully', id: newExerciseId });
@@ -21,7 +21,7 @@ router.post('/addOrUpdateTask', async (req, res) => {
             console.log("addOrUpdateTask - Updating existing document");
 
             const db = admin.firestore();
-            const exerciseRef = db.collection('exercises').doc(id);
+            const exerciseRef = db.collection('aufgaben').doc(id);
             const existingExercise = await exerciseRef.get();
 
             if (existingExercise.exists) {
