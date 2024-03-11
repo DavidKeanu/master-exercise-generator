@@ -34,7 +34,7 @@ const SelectGptModels = ({ transferGptModelToParent }) => {
                     label="GptModel"
                     onChange={handleChange}
                 >
-                    {gptModels.map((option, index) => (
+                    {gptModels?.map((option, index) => (
                         <MenuItem key={index} value={option}>
                             {option}
                         </MenuItem>))}
