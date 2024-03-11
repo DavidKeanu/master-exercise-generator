@@ -9,6 +9,7 @@ class Service {
   static baseUrl = process.env.REACT_APP_BACKEND_BASE_URL;
   static errorMessage = 'Fehler beim Abruf des Services';
 
+
   /**
    * Make a request to an url. Each service should call this function for requests.
    * @param url Url to make a request to
