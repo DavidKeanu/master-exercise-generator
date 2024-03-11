@@ -1,4 +1,4 @@
-import {Alert, Slide, Snackbar} from "@mui/material";
+import {Alert, AlertTitle, Slide, Snackbar} from "@mui/material";
 
 const SolutionAlert = ({isOpen, handleCloseAlert, solution}) => {
 
@@ -11,10 +11,12 @@ const SolutionAlert = ({isOpen, handleCloseAlert, solution}) => {
         >
             {solution?.success ? (
                 <Alert severity="success" sx={{ width: '75%', margin: 'auto' }} onClose={handleCloseAlert}>
+                    <AlertTitle>Erfolgreich</AlertTitle>
                     {solution?.message}
                 </Alert>
             ) : (
                 <Alert severity="error" sx={{ width: '75%', margin: 'auto' }} onClose={handleCloseAlert}>
+                    <AlertTitle>Fehler</AlertTitle>
                     {solution?.message}
                 </Alert>
             )}

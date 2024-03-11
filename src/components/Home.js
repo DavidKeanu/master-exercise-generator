@@ -14,8 +14,8 @@ import SplitPane, {Pane} from 'split-pane-react';
 import 'split-pane-react/esm/themes/default.css'
 import GptExplainer from "./GptExplainer";
 import INITIAL_CODE from "../constants/CodeEditorConstants";
-import DraggableModal from "./DraggableModal";
-import SolutionAlert from "./SolutionAlert";
+import DraggableModal from "./generateAssignment/DraggableModal";
+import SolutionAlert from "./generateAssignment/SolutionAlert";
 
 
 /**
@@ -242,7 +242,7 @@ const Home = () => {
         if (data !== undefined) {
             console.log("test");
             setShowSolutionPopup(true);
-            setSolution(JSON.parse(data))
+            setSolution(data)
         }
     }
 

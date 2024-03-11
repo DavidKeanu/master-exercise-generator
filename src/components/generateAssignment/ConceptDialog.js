@@ -8,7 +8,7 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import {CircularProgress, Grid, IconButton, Rating, Step, StepButton, Stepper, Tooltip} from "@mui/material";
-import generateAssignmentService from "../services/GenerateAssignment";
+import generateAssignmentService from "../../services/GenerateAssignment";
 import {Help} from "@mui/icons-material";
 import ExperienceSelector from "./ExperienceSelector";
 
@@ -38,7 +38,6 @@ const ConceptDialog = ({sendDataToParent, generateTaskDisbaled}) => {
     const [loadingStates, setLoadingStates] = useState(Array(cardData.length).fill(false));
     const [activeStep, setActiveStep] = useState(0);
     const [experience, setExperience] = useState('');
-    const [isGenerateTaskDisbaled, setGenerateTaskDisbaled] = useState(generateTaskDisbaled);
 
     const handleExperienceChange = (value) => {
         setExperience(value);
@@ -143,7 +142,7 @@ const ConceptDialog = ({sendDataToParent, generateTaskDisbaled}) => {
     );
 
     return (
-        <div>
+        <div style={{ marginRight: '16px' }}>
             <Button variant="contained" color="success" onClick={handleOpen} disabled={generateTaskDisbaled}>
                 Aufgabe generieren
             </Button>

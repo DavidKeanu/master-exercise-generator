@@ -71,7 +71,6 @@ router.get('/models', async (req, res) => {
 router.post('/generateTask', async (req, res) => {
     // TODO: change model conditially
     const modelToUse = process.env.DEFAULT_CHAT_GPT_MODEL;
-    console.log(req.body);
     const collectionName = 'exercises';
 
     // Extract mappedData to a constant
@@ -103,7 +102,6 @@ router.post('/generateTask', async (req, res) => {
 });
 
 router.post('/solution', async (req, res) => {
-    console.log(req.body);
     const modelToUse = process.env.DEFAULT_CHAT_GPT_MODEL;
     const promptToUse = util.format(USER_PROMPT_SOLUTION_CODE_WITH_ASSIGNMENT, req.body.code, req.body.aufgabe)
     console.log(promptToUse);

@@ -4,7 +4,7 @@ import {AppBar, IconButton, Toolbar} from "@mui/material";
 import {Lightbulb, PlayArrow, QuestionMark, Save, Task, UploadFile} from "@mui/icons-material";
 import SelectGptModels from "./SelectGptModels";
 import Box from "@mui/material/Box";
-import ConceptDialog from "./ConceptDialog";
+import ConceptDialog from "./generateAssignment/ConceptDialog";
 
 /**
  * Bar on top of the editor. Each editor function is called from here.
