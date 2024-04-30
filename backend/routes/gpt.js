@@ -7,7 +7,7 @@ const {
     USER_PROMPT_EXPLAIN_CODE_WITH_ASSIGNMENT, USER_PROMPT_EXPLAIN_CODE, SYSTEM_PROMPT_EXPLAIN_CODE,
     USER_PROMPT_SOLUTION_CODE_WITH_ASSIGNMENT, SYSTEM_PROMPT_SOLUTION
 } = require("../constants/GptPrompts");
-const {generatePromptHistory} = require("../service/GenerateTaskService");
+const {generatePrompt} = require("../service/GenerateTaskService");
 require('dotenv').config();
 
 
@@ -83,16 +83,16 @@ router.post('/generateTask', async (req, res) => {
     // TODO: change model conditially
     const modelToUse = process.env.DEFAULT_CHAT_GPT_MODEL;
     const collectionName = 'aufgaben';
-
+    console.info("Using: ", modelToUse)
     // Extract mappedData to a constant
-    const chatHistory = await generatePromptHistory(collectionName, req);
+    const chatHistory = await generatePrompt(collectionName, req);
     console.info("ChatHistory - Backend");
     console.info(chatHistory);
 
     try {
         const response = await openaiApi.createChatCompletion({
             //'gpt-4-turbo-preview'
-            model: modelToUse,
+            model: 'gpt-4-turbo-preview',
             messages: chatHistory,
             temperature: 0.9
         });
@@ -104,7 +104,7 @@ router.post('/generateTask', async (req, res) => {
             schwierigkeitsgrad: req.body.schwierigkeitsgrad,
             erfahrung: req.body.erfahrung
         }
-
+        console.info(gptResponse);
         res.status(200).json(task);
     } catch (err) {
         console.error(err);

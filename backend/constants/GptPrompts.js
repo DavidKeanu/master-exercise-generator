@@ -112,9 +112,9 @@ const SYSTEM_PROMPT_GENERATE_TASK = `
 Du bist ein Helfer um Programmieraufgaben für Anfänger zu generieren.
 Schreibe eine Aufgabe und wechle die Sturktur der Aufgaben`;
 
-const SYSTEM_PROMPT_SOLUTION = `Du bekommst eine Aufgabe und Java Code. Du sollst überpüfen, ob der Java Code die Aufgabe korrekt löst. 
+const SYSTEM_PROMPT_SOLUTION = `Du bekommst eine Aufgabe und Java Code. Du sollst überpüfen, ob der Java Code die Aufgabe korrekt und vollständig löst. 
 Gebe nur folgendes Format zurück und nichts anderes:
-{"success: true wenn der Code die Aufgabenstellung korrekt löst, sonst false", "message": "Gebe hier einen Hinweis, wie man die Aufgabe lösen könnte"}`
+{"success: true wenn der Code die Aufgabenstellung korrekt und vollstädnig löst, sonst false", "message": "Schreibe hier eine detaillierte Erklärung, warum der Programmcode die Aufgabe nicht löst."}`
 const USER_PROMPT_SOLUTION_CODE_WITH_ASSIGNMENT = 'Hier der Code\n\n%s\n\nHier die Aufgabe dazu\n\n%s';
 
 
